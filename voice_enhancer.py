@@ -9,7 +9,7 @@ ns_1 = 10**8
 ns_2 = 50**8
 amp_1 = 5
 amp_2 = 10
-amp_3 = 25
+amp_3 = 20
 amp_4 = 8
 max_values = 2 ** 16
 
