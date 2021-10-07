@@ -18,8 +18,9 @@ max_values = 2 ** 16
 
 """Import an audio file in .wav format at 48KHz"""
 path = os.getcwd()
-file_name = 'FFT Test.wav'
+# file_name = 'FFT Test.wav'
 # file_name = 'FFT_2.wav'
+file_name = 'Test_recording.wav'
 
 
 location = os.path.join(path, file_name)
