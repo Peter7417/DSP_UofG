@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 # from hpbsfilter import fir
 import AdaptFilter
+import firfilter
 
 fs = 250
 taps = fs * 2
@@ -10,15 +11,16 @@ data = np.loadtxt("ECG_msc_matric_5.dat")
 lR = 0.0001
 t_max = len(data) * 20
 
-h = np.zeros(taps)
 coeff = np.zeros(taps)
-y = np.empty(len(data))
 w = np.empty(len(data))
+# dc = np.random.normal(0,1,len(data))
 
-f = AdaptFilter.lmsFilter(fs, coeff)
+# f = AdaptFilter.lmsFilter(fs, coeff)
+f = firfilter.firFilter(fs,coeff)
 for i in range(len(data)):
     sinusoid = (np.sin(2 * np.pi * i * (f0 / fs)))
     w[i] = f.dofilterAdaptive(data[i], sinusoid, lR)
+    # w[i] = f.dofilterAdaptive(data[i], sinusoid + dc[i], lR)
 
 t2 = np.linspace(0, t_max, len(w))
 # plt.subplot(1, 2, 1)
