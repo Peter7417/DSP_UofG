@@ -6,32 +6,46 @@ class firFilter:
     def __init__(self, fs, data):
         self.fs = fs
         self.data = data
+        self.taps = fs * 2
+        self.h = np.zeros(self.taps)
+        self.ntaps = len(data)
+        self.h1 = np.zeros(self.ntaps)
+        self.coeff = self.data
 
     def dofilter(self, v):
         ls = []
-        h = np.zeros(self.fs * 2)
-        h[0:int(self.fs * 2 / 2)] = v[int(self.fs * 2 / 2):self.fs * 2]
-        h[int(self.fs * 2 / 2):self.fs * 2] = v[0:int(self.fs * 2 / 2)]
-
-        h_new = h * np.blackman(self.fs * 2)
-
-        l1 = len(self.data)
-        l2 = len(h_new)
-
-        N = l1 + l2 - 1
-        k = np.zeros(N)
-
-        for n in range(N):
-            for i in range(l1):
-                if 0 <= (n - i + 1) < l2:
-                    k[n] = k[n] + self.data[i] * h_new[n - i + 1]
-
-        for i in k:
+        for i in self.data:
             ls.append(i)
 
-        ls.insert(0, ls.pop())
-        ls[0] = self.data[0]
-        conv = np.array(ls)
+        if 0 <= ls.index(v) <= int(self.taps / 2) - 1:
+            distance = ls.index(v) - 0
+            self.h[int(self.taps / 2) + distance - 1] = v
 
-        # conv = np.convolve(h_new, self.data, mode='valid')
-        return conv
+        if int(self.taps / 2) <= ls.index(v) <= self.taps - 1:
+            distance = ls.index(v) - int(self.taps / 2)
+            self.h[0 + distance - 1] = v
+
+        h_new = self.h * np.blackman(self.taps)
+        return h_new
+
+    def getOutput(self, x, y):
+        val = 0
+        if len(x) == len(y):
+            for i in range(len(x)):
+                val += x[i] * y[i]
+        else:
+            raise 'cannot perform 1D array multiplication as array lengths are not the same'
+
+        return val
+
+    def dofilterAdaptive(self, signal, noise, learningRate):
+
+        for j in range(self.ntaps - 1):
+            self.h1[self.ntaps - j - 1] = self.h1[self.ntaps - j - 2]
+        self.h1[0] = noise
+        output = self.getOutput(self.h1, self.coeff)
+        error = signal - output
+        for k in range(self.ntaps):
+            self.coeff[k] += error * learningRate * self.h1[k]
+
+        return error

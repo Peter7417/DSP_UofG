@@ -80,7 +80,6 @@ def highpassDesign(f, w2):
 data = np.loadtxt('ECG_msc_matric_5.dat')
 t_max = len(data) * 20
 t = np.linspace(0, t_max, len(data))
-M = 500
 plt.figure(1)
 plt.subplot(1, 2, 1)
 plt.plot(t, data)
@@ -103,12 +102,14 @@ t1 = np.linspace(0, len(conv)*20, len(conv))
 plt.figure(1)
 plt.subplot(1, 2, 2)
 plt.plot(t1, conv)
+# plt.xlim(0, t_max)
 plt.title('ECG 50Hz Removed using np.convolve')
 plt.xlabel('time(sec)')
 plt.ylabel('ECG raw')
 
 plt.figure(4)
+t2 = np.linspace(0, len(y)*20, len(y))
 plt.title('using lfilter')
-plt.plot(y)
+plt.plot(t2,y)
 
 plt.show()
