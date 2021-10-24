@@ -25,7 +25,7 @@ for n in range(N):
 
 
 for i in k:
-    ls.append((i))
+    ls.append(i)
 
 print(ls)
 ls.insert(0, ls.pop())

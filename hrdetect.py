@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import filter
-
+import firfilter
 """Create a function to perform convolution """
 
 
@@ -55,9 +54,6 @@ def highpassDesign(freq, w2):
     x = np.real(np.fft.ifft(X))
 
     return x
-
-
-# Q1 and Q2
 """Plot the ECG"""
 data = np.loadtxt('ECG_msc_matric_5.dat')
 t_max = len(data) * 20
@@ -82,62 +78,14 @@ impulse_HP = highpassDesign(fs, f3)
 coeff = convolve(impulse_HP, impulse_BS)
 
 """Call the class to get the reshuffled impulse response by feeding in data one at a time"""
-fil = filter.firFilter(fs, coeff)
+fil = firfilter.firFilter(fs, coeff)
 for i in range(len(coeff)):
     h_new = fil.dofilter(coeff[i])
 
 """Convolve the new impulse response with the ecg data"""
 fir = convolve(h_new, data)
 
-"""Plot both the original ECG data set and new filtered data set """
-plt.figure(1)
-plt.subplot(1, 2, 1)
-plt.plot(t, data)
-plt.title('ECG')
-plt.xlabel('time(sec)')
-plt.ylabel('ECG (volts)')
-
-t1 = np.linspace(0, len(fir) * 20, len(fir))
-plt.subplot(1, 2, 2)
-plt.plot(t1, fir)
-plt.xlim(0, t_max + 5000)
-plt.title('ECG 50Hz and Dc Noise Removed')
-plt.xlabel('time(sec)')
-plt.ylabel('ECG (volts)')
-
-# Q3
-
-"""Create an empty data set to store the output in and 
-another data set to hold the changing coefficients of the LMS filter"""
-w = np.empty(len(data))
-coeff = np.zeros(fs * 2)
-
-"""Call the class function and pass in one data point at a time to give us the output of the lms filter"""
-f = filter.firFilter(fs, coeff)
-for i in range(len(data)):
-    sinusoid = (np.sin(2 * np.pi * i * (f0 / fs)))
-    w[i] = f.dofilterAdaptive(data[i], sinusoid, lR)
-
-"""Plot the FIR data set and the LMS data set"""
-t2 = np.linspace(0, t_max, len(w))
-plt.figure(2)
-plt.subplot(1, 2, 1)
-plt.plot(t1, fir)
-plt.xlim(0, t_max + 5000)
-plt.title('ECG 50Hz FIR Filter')
-plt.xlabel('time(sec)')
-plt.ylabel('ECG (volts)')
-
-plt.subplot(1, 2, 2)
-plt.plot(t2, w)
-plt.title('ECG 50Hz LMS Filter')
-plt.xlabel('time(sec)')
-plt.ylabel('ECG (volts)')
-
-# Q4
-
 """Find the range in the FIR plot where a heart beat occurs and plot it"""
-plt.figure(3)
 plt.subplot(1, 2, 1)
 template = fir[1200:1600]
 plt.plot(template)
@@ -152,10 +100,5 @@ plt.plot(coefficients)
 plt.title("matched filter time reversed")
 plt.xlabel('time(sec)')
 plt.ylabel('ECG (volts)')
-
-# coefficients = coefficients**2
-# plt.figure(4)
-# plt.plot(signal.lfilter(coefficients,1,data))
-
 
 plt.show()
