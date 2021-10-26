@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import firfilter
+import AdaptFilter
+
 """Create a function to perform convolution """
 
 
@@ -54,14 +56,18 @@ def highpassDesign(freq, w2):
     x = np.real(np.fft.ifft(X))
 
     return x
+
+
+# Q1 and Q2
 """Plot the ECG"""
 data = np.loadtxt('ECG_msc_matric_5.dat')
-t_max = len(data) * 20
+t_max = 20
 t = np.linspace(0, t_max, len(data))
 
 f0 = 50  # noise frequency
 lR = 0.0001  # learning rate
 fs = 250  # sample frequency
+taps = fs * 2
 
 """Bandstop"""
 f1 = 45 / fs  # before 50Hz
@@ -78,17 +84,26 @@ impulse_HP = highpassDesign(fs, f3)
 coeff = convolve(impulse_HP, impulse_BS)
 
 """Call the class to get the reshuffled impulse response by feeding in data one at a time"""
-fil = firfilter.firFilter(fs, coeff)
-for i in range(len(coeff)):
-    h_new = fil.dofilter(coeff[i])
+h = np.zeros(taps)
+fil = AdaptFilter.firFilter(fs, coeff)
+for i in range(len(h)):
+    k, p = fil.dofilter(coeff[i])
+    h[p] = k
 
+h_new = h * np.blackman(taps)
+# print(h_new)
 """Convolve the new impulse response with the ecg data"""
 fir = convolve(h_new, data)
 
+plt.figure(1)
+plt.plot(fir)
+
 """Find the range in the FIR plot where a heart beat occurs and plot it"""
+plt.figure(2)
 plt.subplot(1, 2, 1)
 template = fir[1200:1600]
-plt.plot(template)
+time = t[1200:1600]
+plt.plot(time,template)
 plt.title("matched filter template")
 plt.xlabel('time(sec)')
 plt.ylabel('ECG (volts)')
@@ -96,7 +111,7 @@ plt.ylabel('ECG (volts)')
 """Plot the time reversed version if the template """
 plt.subplot(1, 2, 2)
 coefficients = template[::-1]
-plt.plot(coefficients)
+plt.plot(time,coefficients)
 plt.title("matched filter time reversed")
 plt.xlabel('time(sec)')
 plt.ylabel('ECG (volts)')

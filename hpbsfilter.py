@@ -61,12 +61,13 @@ def highpassDesign(freq, w2):
 # Q1 and Q2
 """Plot the ECG"""
 data = np.loadtxt('ECG_msc_matric_5.dat')
-t_max = len(data) * 20
+t_max = 20
 t = np.linspace(0, t_max, len(data))
 
 f0 = 50  # noise frequency
 lR = 0.0001  # learning rate
 fs = 250  # sample frequency
+taps = fs * 2
 
 """Bandstop"""
 f1 = 45 / fs  # before 50Hz
@@ -83,10 +84,14 @@ impulse_HP = highpassDesign(fs, f3)
 coeff = convolve(impulse_HP, impulse_BS)
 
 """Call the class to get the reshuffled impulse response by feeding in data one at a time"""
-fil = firfilter.firFilter(fs, coeff)
-for i in range(len(coeff)):
-    h_new = fil.dofilter(coeff[i])
+h = np.zeros(taps)
+fil = AdaptFilter.firFilter(fs, coeff)
+for i in range(len(h)):
+    k, p = fil.dofilter(coeff[i])
+    h[p] = k
 
+h_new = h * np.blackman(taps)
+# print(h_new)
 """Convolve the new impulse response with the ecg data"""
 fir = convolve(h_new, data)
 
@@ -98,10 +103,10 @@ plt.title('ECG')
 plt.xlabel('time(sec)')
 plt.ylabel('ECG (volts)')
 
-t1 = np.linspace(0, len(fir) * 20, len(fir))
+t1 = np.linspace(0, t_max, len(fir))
 plt.subplot(1, 2, 2)
 plt.plot(t1, fir)
-plt.xlim(0, t_max + 5000)
+plt.xlim(0, t_max)
 plt.title('ECG 50Hz and Dc Noise Removed')
 plt.xlabel('time(sec)')
 plt.ylabel('ECG (volts)')
