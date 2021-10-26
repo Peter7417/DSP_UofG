@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import firfilter
-import AdaptFilter
+
 
 """Create a function to perform convolution """
 
@@ -85,9 +85,9 @@ coeff = convolve(impulse_HP, impulse_BS)
 
 """Call the class to get the reshuffled impulse response by feeding in data one at a time"""
 h = np.zeros(taps)
-fil = AdaptFilter.firFilter(fs, coeff)
+fil = firfilter.firFilter(fs, coeff, 0)
 for i in range(len(h)):
-    k, p = fil.dofilter(coeff[i])
+    k, p = fil.getImpulse(coeff[i])
     h[p] = k
 
 h_new = h * np.blackman(taps)

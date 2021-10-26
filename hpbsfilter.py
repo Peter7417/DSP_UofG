@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import firfilter
-import AdaptFilter
+
 
 """Create a function to perform convolution """
 
@@ -85,15 +85,34 @@ coeff = convolve(impulse_HP, impulse_BS)
 
 """Call the class to get the reshuffled impulse response by feeding in data one at a time"""
 h = np.zeros(taps)
-fil = AdaptFilter.firFilter(fs, coeff)
+fil = firfilter.firFilter(fs, coeff, 0)
 for i in range(len(h)):
-    k, p = fil.dofilter(coeff[i])
+    k, p = fil.getImpulse(coeff[i])
     h[p] = k
 
 h_new = h * np.blackman(taps)
-# print(h_new)
-"""Convolve the new impulse response with the ecg data"""
-fir = convolve(h_new, data)
+
+"""Call the class method dofilter, by passing in only a scalar value which outputs a scalar value, 
+which performs a simple multiplication operation to complete the convolution process"""
+N = len(h_new) + len(data) - 1
+l1 = len(h_new)
+l2 = len(data)
+lst = []
+b = np.zeros(len(h_new) + len(data) - 1)
+
+for n in range(N):
+    for i in range(l1):
+        if 0 <= (n - i + 1) < l2:
+            b[n] = b[n] + firfilter.firFilter(fs, h_new, i).dofilter(data[n-i+1])
+
+for i in b:
+    lst.append(i)
+
+"""Rearrange the list to move the last value to the front and replace it with the first value of data set 1
+and convert back to an array"""
+lst.insert(0, lst.pop())
+lst[0] = h_new[0]
+fir = np.array(lst)
 
 """Plot both the original ECG data set and new filtered data set """
 plt.figure(1)
@@ -110,7 +129,5 @@ plt.xlim(0, t_max)
 plt.title('ECG 50Hz and Dc Noise Removed')
 plt.xlabel('time(sec)')
 plt.ylabel('ECG (volts)')
-
-
 
 plt.show()
