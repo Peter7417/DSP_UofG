@@ -3,11 +3,11 @@ import numpy as np
 
 class firFilter:
 
-    def __init__(self, fs, data,it):
+    def __init__(self, fs, data):
         self.fs = fs
-        self.i = it
-        self.coeff = data
         self.taps = fs * 2
+        self.coeff = data
+        self.h = np.zeros(self.taps)
         self.ntaps = len(data)
         self.h1 = np.zeros(self.ntaps)
 
@@ -24,7 +24,19 @@ class firFilter:
             return x, distance
 
     def dofilter(self, v):
-        return v * self.coeff[self.i]
+        j = self.ntaps - 1
+        while j > 0:
+            self.h[j] = self.h[j - 1]
+            j -= 1
+
+        self.h[0] = v
+        output = 0
+        i = 0
+        while i < self.ntaps:
+            output += self.h[i] * self.coeff[i]
+            i += 1
+
+        return output
 
     def getOutput(self, x, y):
         val = 0
