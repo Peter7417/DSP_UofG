@@ -11,17 +11,17 @@ class firFilter:
         self.ntaps = len(data)
         self.h1 = np.zeros(self.ntaps)
 
-    def getImpulse(self, x):
-        ls = []
-        for i in self.coeff[0:self.taps]:
-            ls.append(i)
-
-        if 0 <= ls.index(x) <= int(self.taps / 2) - 1:
-            distance = ls.index(x) - 0
-            return x, distance + int(self.taps / 2)
-        if int(self.taps / 2) <= ls.index(x) <= self.taps - 1:
-            distance = ls.index(x) - int(self.taps / 2)
-            return x, distance
+    # def getImpulse(self, x):
+    #     ls = []
+    #     for i in self.coeff[0:self.taps]:
+    #         ls.append(i)
+    #
+    #     if 0 <= ls.index(x) <= int(self.taps / 2) - 1:
+    #         distance = ls.index(x) - 0
+    #         return x, distance + int(self.taps / 2)
+    #     if int(self.taps / 2) <= ls.index(x) <= self.taps - 1:
+    #         distance = ls.index(x) - int(self.taps / 2)
+    #         return x, distance
 
     def dofilter(self, v):
         j = self.ntaps - 1

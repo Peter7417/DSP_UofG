@@ -29,6 +29,7 @@ def convolve(x, y):
     ls[0] = x[0]
     return np.array(ls)
 
+
 def convolveValid(x, y):
     ls = []  # Create a list to store the convolution array in
     l1 = len(x)  # Find the length of the data 1 set
@@ -88,7 +89,6 @@ t_max = 20
 t = np.linspace(0, t_max, len(data))
 
 f0 = 50  # noise frequency
-lR = 0.0001  # learning rate
 fs = 250  # sample frequency
 taps = (fs * 2)
 
@@ -106,17 +106,20 @@ impulse_HP = highpassDesign(fs, f3, taps)
 """Convolve the coefficients of both the Bandstop and Highpass"""
 coeff = convolve(impulse_HP, impulse_BS)
 
-"""Call the class to get the reshuffled impulse response by feeding in data one at a time"""
-h = np.zeros(taps)
-fil = firfilter.firFilter(fs, coeff)
-for i in range(taps):
-    k, p = fil.getImpulse(coeff[i])
-    h[p] = k
+"""Reshuffle the coefficients"""
+# h = np.zeros(taps)
+# fil = firfilter.firFilter(fs, coeff)
+# for i in range(taps):
+#     k, p = fil.getImpulse(coeff[i])
+#     h[p] = k
+#
+# h_new = h * np.blackman(taps)
+h1 = np.zeros(taps)
+h1[0:int(taps / 2)] = coeff[int(taps / 2):taps]
+h1[int(taps / 2):taps] = coeff[0:int(taps / 2)]
+h_new = h1 * np.blackman(taps)
 
-h_new = h * np.blackman(taps)
-
-"""Call the class method dofilter, by passing in only a scalar value at a time which outputs a scalar value, 
-which performs a simple multiplication operation to complete the convolution process"""
+"""Call the class method dofilter, by passing in only a scalar value at a time which outputs a scalar value"""
 fir = np.empty(max(len(data), len(h_new)) - min(len(data), len(h_new)) + 1)
 fi = firfilter.firFilter(fs, h_new)
 for i in range(len(fir)):
