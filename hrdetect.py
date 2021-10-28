@@ -50,7 +50,7 @@ def convolveValid(x, y):
     """Rearrange the list to move the last value to the front and replace it with the first value of data set 1 
     and convert back to an array"""
     ls.insert(0, ls.pop())
-    ls[0] = x[0]
+    ls[0] = x[0]*y[0]
     return np.array(ls)
 
 
@@ -115,7 +115,7 @@ h_new = h1 * np.blackman(taps)
 
 """Call the class method dofilter, by passing in only a scalar value at a time which outputs a scalar value"""
 fir = np.empty(max(len(data), len(h_new)) - min(len(data), len(h_new)) + 1)
-fi = firfilter.firFilter(fs, h_new)
+fi = firfilter.firFilter(h_new)
 for i in range(len(fir)):
     fir[i] = fi.dofilter(data[i])
 
@@ -150,7 +150,7 @@ n_coeff[0:int(len(time)/2)-10] = 0
 n_coeff[int(len(time)/2) + 10:len(time)] = 0
 plt.plot(time, n_coeff)
 plt.title('Using sinc function')
-n_coeff = n_coeff**2
+# n_coeff = n_coeff**2
 
 # """"Use the dofilter function with the highpass and the ecg data set to get a data set with no DC influence"""
 # data1 = convolveValid(impulse_HP, data)
@@ -161,7 +161,7 @@ n_coeff = n_coeff**2
 
 """"Use the dofilter function with the wavelet and the previous data set to find the convolved data set"""
 fir1 = np.empty(max(len(fir), len(n_coeff)) - min(len(fir), len(n_coeff)) + 1)
-fi = firfilter.firFilter(fs, n_coeff)
+fi = firfilter.firFilter(n_coeff)
 for i in range(len(fir1)):
     fir1[i] = fi.dofilter(fir[i])
 

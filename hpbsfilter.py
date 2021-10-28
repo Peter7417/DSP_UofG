@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import firfilter
+import scipy.signal as signal
 
 
 """Create a function to perform convolution """
@@ -26,7 +27,7 @@ def convolve(x, y):
     """Rearrange the list to move the last value to the front and replace it with the first value of data set 1 
     and convert back to an array"""
     ls.insert(0, ls.pop())
-    ls[0] = x[0]
+    ls[0] = x[0]*y[0]
     return np.array(ls)
 
 
@@ -50,7 +51,7 @@ def convolveValid(x, y):
     """Rearrange the list to move the last value to the front and replace it with the first value of data set 1 
     and convert back to an array"""
     ls.insert(0, ls.pop())
-    ls[0] = x[0]
+    ls[0] = x[0]*y[0]
     return np.array(ls)
 
 
@@ -104,26 +105,44 @@ impulse_BS = bandstopDesign(fs, f1, f2, taps)
 impulse_HP = highpassDesign(fs, f3, taps)
 
 """Convolve the coefficients of both the Bandstop and Highpass"""
-coeff = convolve(impulse_HP, impulse_BS)
+# coeff = convolve(impulse_HP, impulse_BS)
 
-"""Reshuffle the coefficients"""
-# h = np.zeros(taps)
-# fil = firfilter.firFilter(fs, coeff)
-# for i in range(taps):
-#     k, p = fil.getImpulse(coeff[i])
-#     h[p] = k
-#
-# h_new = h * np.blackman(taps)
+
+h = np.zeros(taps)
+h[0:int(taps / 2)] = impulse_HP[int(taps / 2):taps]
+h[int(taps / 2):taps] = impulse_HP[0:int(taps / 2)]
+h_new = h * np.hanning(taps)
+"""Reshuffle the coefficients for bandstop"""
+
 h1 = np.zeros(taps)
-h1[0:int(taps / 2)] = coeff[int(taps / 2):taps]
-h1[int(taps / 2):taps] = coeff[0:int(taps / 2)]
-h_new = h1 * np.blackman(taps)
+h1[0:int(taps / 2)] = impulse_BS[int(taps / 2):taps]
+h1[int(taps / 2):taps] = impulse_BS[0:int(taps / 2)]
+h_new1 = h1 * np.hanning(taps)
 
+# plt.figure(6)
+# plt.subplot(1,2,1)
+# plt.plot(h_new)
+# plt.subplot(1,2,2)
+# plt.plot(h_new1)
 """Call the class method dofilter, by passing in only a scalar value at a time which outputs a scalar value"""
-fir = np.empty(max(len(data), len(h_new)) - min(len(data), len(h_new)) + 1)
-fi = firfilter.firFilter(fs, h_new)
+fir_HP = np.empty(max(len(data), len(h_new)) - min(len(data), len(h_new)) + 1)
+fi = firfilter.firFilter(h_new)
+for i in range(len(fir_HP)):
+    fir_HP[i] = fi.dofilter(data[i])
+
+fir = np.empty(max(len(fir_HP), len(h_new1)) - min(len(fir_HP), len(h_new1)) + 1)
+po = firfilter.firFilter(h_new1)
 for i in range(len(fir)):
-    fir[i] = fi.dofilter(data[i])
+    fir[i] = po.dofilter(fir_HP[i])
+conv = np.convolve(h_new, data, mode='valid')
+con1 = np.convolve(h_new1,conv,mode='valid')
+
+
+d = convolveValid(h_new,data)
+d1 = convolveValid(h_new1,conv)
+print('conv: ',conv)
+print('fir_hp: ',d)
+
 
 """Plot both the original ECG data set and new filtered data set """
 plt.figure(1)
@@ -133,12 +152,15 @@ plt.title('ECG')
 plt.xlabel('time(sec)')
 plt.ylabel('ECG (volts)')
 
-t1 = np.linspace(0, t_max, len(fir))
+t1 = np.linspace(0, t_max, len(con1))
 plt.subplot(1, 2, 2)
-plt.plot(t1, fir)
+plt.plot(t1, con1)
 plt.xlim(0, t_max)
 plt.title('ECG 50Hz and Dc Noise Removed')
 plt.xlabel('time(sec)')
 plt.ylabel('ECG (volts)')
 
-plt.show()
+plt.figure(5)
+y = signal.lfilter(h_new1, 1, conv)
+plt.plot(y)
+# plt.show()

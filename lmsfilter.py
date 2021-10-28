@@ -15,7 +15,7 @@ coeff = np.zeros(taps)
 w = np.empty(len(data))
 
 
-f = firfilter.firFilter(fs, coeff)
+f = firfilter.firFilter(coeff)
 for i in range(len(data)):
     sinusoid = (np.sin(2 * np.pi * i * (f0 / fs)))
     w[i] = f.dofilterAdaptive(data[i], sinusoid, lR)

@@ -3,27 +3,15 @@ import numpy as np
 
 class firFilter:
 
-    def __init__(self, fs, data):
-        self.fs = fs
-        self.taps = fs * 2
+    def __init__(self, data):
         self.coeff = data
-        self.h = np.zeros(self.taps)
+        self.ntaps = len(data)
+        self.h = np.zeros(self.ntaps)
         self.ntaps = len(data)
         self.h1 = np.zeros(self.ntaps)
 
-    # def getImpulse(self, x):
-    #     ls = []
-    #     for i in self.coeff[0:self.taps]:
-    #         ls.append(i)
-    #
-    #     if 0 <= ls.index(x) <= int(self.taps / 2) - 1:
-    #         distance = ls.index(x) - 0
-    #         return x, distance + int(self.taps / 2)
-    #     if int(self.taps / 2) <= ls.index(x) <= self.taps - 1:
-    #         distance = ls.index(x) - int(self.taps / 2)
-    #         return x, distance
-
     def dofilter(self, v):
+        # delay line buffer
         j = self.ntaps - 1
         while j > 0:
             self.h[j] = self.h[j - 1]
