@@ -10,20 +10,17 @@ class firFilter:
         self.ntaps = len(data)
         self.h1 = np.zeros(self.ntaps)
 
+        self.s_offset = 0
+
     def dofilter(self, v):
-        # delay line buffer
-        j = self.ntaps - 1
-        while j > 0:
-            self.h[j] = self.h[j - 1]
-            j -= 1
-
-        self.h[0] = v
+        # ring buffer
+        self.h[self.s_offset % self.ntaps] = v
+        
         output = 0
-        i = 0
-        while i < self.ntaps:
-            output += self.h[i] * self.coeff[i]
-            i += 1
+        for i in range(self.ntaps):
+            output += self.h[(i + self.s_offset) % self.ntaps] * self.coeff[i]
 
+        self.s_offset += 1
         return output
 
     def getOutput(self, x, y):
