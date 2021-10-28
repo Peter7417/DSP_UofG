@@ -107,11 +107,12 @@ impulse_HP = highpassDesign(fs, f3, taps)
 """Convolve the coefficients of both the Bandstop and Highpass"""
 # coeff = convolve(impulse_HP, impulse_BS)
 
-
+"""Reshuffle the coefficients for highpass"""
 h = np.zeros(taps)
 h[0:int(taps / 2)] = impulse_HP[int(taps / 2):taps]
 h[int(taps / 2):taps] = impulse_HP[0:int(taps / 2)]
 h_new = h * np.hanning(taps)
+
 """Reshuffle the coefficients for bandstop"""
 
 h1 = np.zeros(taps)
