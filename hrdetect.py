@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import firfilter
+import scipy.signal as signal
 
 
 """Create a function to perform convolution """
@@ -104,30 +105,59 @@ f3 = (0.5 / fs)   # ideal for cutting off DC noise
 impulse_BS = bandstopDesign(f1, f2, taps)
 impulse_HP = highpassDesign(f3, taps)
 
-"""Convolve the coefficients of both the Bandstop and Highpass"""
-coeff = convolveFull(impulse_HP, impulse_BS)
+"""Reshuffle the coefficients for highpass"""
+h = np.zeros(taps)
+h[0:int(taps / 2)] = impulse_HP[int(taps / 2):taps]
+h[int(taps / 2):taps] = impulse_HP[0:int(taps / 2)]
+h_new = h * np.hanning(taps)
 
-"""Reshuffle the coefficients"""
+"""Reshuffle the coefficients for bandstop"""
+
 h1 = np.zeros(taps)
-h1[0:int(taps / 2)] = coeff[int(taps / 2):taps]
-h1[int(taps / 2):taps] = coeff[0:int(taps / 2)]
-h_new = h1 * np.blackman(taps)
+h1[0:int(taps / 2)] = impulse_BS[int(taps / 2):taps]
+h1[int(taps / 2):taps] = impulse_BS[0:int(taps / 2)]
+h_new1 = h1 * np.hanning(taps)
 
 """Call the class method dofilter, by passing in only a scalar value at a time which outputs a scalar value"""
-fir = np.empty(max(len(data), len(h_new)) - min(len(data), len(h_new)) + 1)
+fir_HP = np.empty(max(len(data), len(h_new)) - min(len(data), len(h_new)) + 1)
 fi = firfilter.firFilter(h_new)
+for i in range(len(fir_HP)):
+    fir_HP[i] = fi.dofilter(data[i])
+
+fir = np.empty(max(len(fir_HP), len(h_new1)) - min(len(fir_HP), len(h_new1)) + 1)
+po = firfilter.firFilter(h_new1)
 for i in range(len(fir)):
-    fir[i] = fi.dofilter(data[i])
+    fir[i] = po.dofilter(fir_HP[i])
 
+plt.figure(8)
+plt.plot(fir)
 
+"Test"
+# conv = np.convolve(h_new, data, mode='valid')
+# # con1 = np.convolve(h_new1,conv,mode='valid')
+#
+#
+# plt.figure(8)
+# plt.plot(signal.lfilter(h_new1,1,conv))
+# y = signal.lfilter(h_new1,1,conv)
 # Q4
 
 """Find the range in the FIR plot where a heart beat occurs and plot it"""
 
+"Test"
+# plt.figure(2)
+# plt.subplot(2, 2, 1)
+# template = y[500:700]
+# time = t[500:700]
+# plt.plot(time, template)
+# plt.title("matched filter template")
+# plt.xlabel('time(sec)')
+# plt.ylabel('ECG (volts)')
+
 plt.figure(2)
 plt.subplot(2, 2, 1)
-template = fir[525:725]
-time = t[525:725]
+template = fir[775:975]
+time = t[775:975]
 plt.plot(time, template)
 plt.title("matched filter template")
 plt.xlabel('time(sec)')
@@ -150,14 +180,8 @@ n_coeff[0:int(len(time)/2)-10] = 0
 n_coeff[int(len(time)/2) + 10:len(time)] = 0
 plt.plot(time, n_coeff)
 plt.title('Using sinc function')
-# n_coeff = n_coeff**2
+n_coeff = n_coeff**2
 
-# """"Use the dofilter function with the highpass and the ecg data set to get a data set with no DC influence"""
-# data1 = convolveValid(impulse_HP, data)
-# data1 = np.empty(max(len(data), len(impulse_HP)) - min(len(data), len(impulse_HP)) + 1)
-# fi = firfilter.firFilter(fs, impulse_HP)
-# for i in range(len(data1)):
-#     data1[i] = fi.dofilter(data[i])
 
 """"Use the dofilter function with the wavelet and the previous data set to find the convolved data set"""
 fir1 = np.empty(max(len(fir), len(n_coeff)) - min(len(fir), len(n_coeff)) + 1)
@@ -165,10 +189,10 @@ fi = firfilter.firFilter(n_coeff)
 for i in range(len(fir1)):
     fir1[i] = fi.dofilter(fir[i])
 
-# fir1 = np.empty(max(len(data1), len(n_coeff)) - min(len(data1), len(n_coeff)) + 1)
-# fi = firfilter.firFilter(fs, n_coeff)
-# for i in range(len(fir1)):
-#     fir1[i] = fi.dofilter(data1[i])
+"Test"
+# q = signal.lfilter(n_coeff,1,y)
+# plt.figure(9)
+# plt.plot(q)
 
 
 """Plot both the original FIR and the new FIR"""
@@ -180,7 +204,5 @@ plt.plot(t1, fir)
 plt.title('Original FIR output')
 plt.subplot(1, 2, 2)
 plt.plot(t2, fir1)
-# plt.xlim(2.5)
-# plt.ylim(-.01,0.03)
 plt.title('Sinc function on ECG with no DC noise')
 plt.show()

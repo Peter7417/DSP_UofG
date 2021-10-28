@@ -120,11 +120,6 @@ h1[0:int(taps / 2)] = impulse_BS[int(taps / 2):taps]
 h1[int(taps / 2):taps] = impulse_BS[0:int(taps / 2)]
 h_new1 = h1 * np.hanning(taps)
 
-# plt.figure(6)
-# plt.subplot(1,2,1)
-# plt.plot(h_new)
-# plt.subplot(1,2,2)
-# plt.plot(h_new1)
 """Call the class method dofilter, by passing in only a scalar value at a time which outputs a scalar value"""
 fir_HP = np.empty(max(len(data), len(h_new)) - min(len(data), len(h_new)) + 1)
 fi = firfilter.firFilter(h_new)
@@ -135,14 +130,16 @@ fir = np.empty(max(len(fir_HP), len(h_new1)) - min(len(fir_HP), len(h_new1)) + 1
 po = firfilter.firFilter(h_new1)
 for i in range(len(fir)):
     fir[i] = po.dofilter(fir_HP[i])
-conv = np.convolve(h_new, data, mode='valid')
-con1 = np.convolve(h_new1,conv,mode='valid')
 
-
-d = convolveValid(h_new,data)
-d1 = convolveValid(h_new1,conv)
-print('conv: ',conv)
-print('fir_hp: ',d)
+"Test"
+# conv = np.convolve(h_new, data, mode='valid')
+# con1 = np.convolve(h_new1,conv,mode='valid')
+#
+#
+# d = convolveValid(h_new,data)
+# d1 = convolveValid(h_new1,conv)
+# print('conv: ',conv)
+# print('fir_hp: ',d)
 
 
 """Plot both the original ECG data set and new filtered data set """
@@ -153,15 +150,16 @@ plt.title('ECG')
 plt.xlabel('time(sec)')
 plt.ylabel('ECG (volts)')
 
-t1 = np.linspace(0, t_max, len(con1))
+t1 = np.linspace(0, t_max, len(fir))
 plt.subplot(1, 2, 2)
-plt.plot(t1, con1)
+plt.plot(t1, fir)
 plt.xlim(0, t_max)
 plt.title('ECG 50Hz and Dc Noise Removed')
 plt.xlabel('time(sec)')
 plt.ylabel('ECG (volts)')
 
-plt.figure(5)
-y = signal.lfilter(h_new1, 1, conv)
-plt.plot(y)
-# plt.show()
+"Test"
+# plt.figure(5)
+# y = signal.lfilter(h_new1, 1, conv)
+# plt.plot(y)
+plt.show()
