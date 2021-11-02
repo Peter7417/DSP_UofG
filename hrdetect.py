@@ -132,6 +132,7 @@ for i in range(len(fir)):
 # plt.figure(8)
 # plt.plot(fir)
 
+# fir[0:900] = 0
 # Q4
 
 """Find the range in the FIR plot where a heart beat occurs and plot it"""
@@ -139,7 +140,7 @@ for i in range(len(fir)):
 "Test"
 
 plt.figure(2)
-plt.subplot(1, 2, 1)
+plt.subplot(2, 2, 1)
 template = fir[950:1200]
 time = t[950:1200]
 plt.plot(time, template)
@@ -148,7 +149,7 @@ plt.xlabel('time(sec)')
 plt.ylabel('ECG (volts)')
 
 """Plot the time reversed version of the template """
-plt.subplot(1, 2, 2)
+plt.subplot(2, 2, 2)
 coefficients = template[::-1]
 plt.plot(time, coefficients)
 plt.title("matched filter time reversed + sinc func")
@@ -156,15 +157,22 @@ plt.xlabel('time(sec)')
 plt.ylabel('ECG (volts)')
 
 """Create the sinc function"""
-# low = min(coefficients)
 wavelet = np.linspace(-1, 1, len(time))
-plt.subplot(1, 2, 2)
+plt.subplot(2, 2, 2)
 n_coeff = max(coefficients)*np.sinc(wavelet*25)
 n_coeff[0:int(len(time)/2)-8] = 0
 n_coeff[int(len(time)/2) + 8:len(time)] = 0
 plt.plot(time, n_coeff)
-# plt.title('Using sinc function')
-# n_coeff = n_coeff**2
+
+"""Optimize sinc function"""
+plt.subplot(2,2,3)
+n_coeff = 5*np.sinc(wavelet*25)
+n_coeff[0:int(len(time)/2)-8] = 0
+n_coeff[int(len(time)/2) + 8:len(time)] = 0
+plt.plot(time,n_coeff)
+plt.xlabel('time(sec)')
+plt.title('5* sinc function')
+n_coeff = n_coeff**2
 
 # Subplot adjustments
 plt.subplots_adjust(left=0.1,
@@ -186,9 +194,13 @@ t2 = np.linspace(0, t_max, len(fir1))
 plt.figure(6)
 plt.subplot(1, 2, 1)
 plt.plot(t1, fir)
+plt.xlabel('time(sec)')
+plt.ylabel('ECG (volts)')
 plt.title('Original FIR output')
 plt.subplot(1, 2, 2)
 plt.plot(t2, fir1)
+plt.xlabel('time(sec)')
+plt.ylabel('ECG (volts)')
 plt.title('Sinc function on original FIR')
 
 
