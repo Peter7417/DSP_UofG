@@ -1,17 +1,6 @@
 import numpy as np
 
 
-def getOutput(x, y):
-    val = 0
-    if len(x) == len(y):
-        for i in range(len(x)):
-            val += x[i] * y[i]
-    else:
-        raise 'cannot perform 1D array multiplication as array lengths are different'
-
-    return val
-
-
 class firFilter:
 
     def __init__(self, _data):

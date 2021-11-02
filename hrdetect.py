@@ -2,56 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import firfilter
 
-"""Create a function to perform convolution """
-
-
-def convolveFull(x, y):
-    ls = []  # Create a list to store the convolution array in
-    l1 = len(x)  # Find the length of the data 1 set
-    l2 = len(y)  # FInd the length of the data 2 set
-    N = l1 + l2 - 1  # Find the length of the convolved array
-    k = np.zeros(N)  # Create an array of zeros to store the convolution result
-
-    """Logic behind the convolution operation"""
-    for n in range(N):
-        for p in range(l1):
-            if 0 <= (n - p + 1) < l2:
-                k[n] = k[n] + x[p] * y[n - p + 1]
-
-    """Append all convolution values in a list"""
-    for j in k:
-        ls.append(j)
-
-    """Rearrange the list to move the last value to the front and replace it with the first value of data set 1 
-    and convert back to an array"""
-    ls.insert(0, ls.pop())
-    ls[0] = x[0]
-    return np.array(ls)
-
-
-def convolveValid(x, y):
-    ls = []  # Create a list to store the convolution array in
-    l1 = len(x)  # Find the length of the data 1 set
-    l2 = len(y)  # FInd the length of the data 2 set
-    N = max(l2, l1) - min(l2, l1) + 1  # Find the length of the convolved array
-    k = np.zeros(N)  # Create an array of zeros to store the convolution result
-
-    """Logic behind the convolution operation"""
-    for n in range(N):
-        for p in range(l1):
-            if 0 <= (n - p + 1) < l2:
-                k[n] = k[n] + x[p] * y[n - p + 1]
-
-    """Append all convolution values in a list"""
-    for j in k:
-        ls.append(j)
-
-    """Rearrange the list to move the last value to the front and replace it with the first value of data set 1 
-    and convert back to an array"""
-    ls.insert(0, ls.pop())
-    ls[0] = x[0]*y[0]
-    return np.array(ls)
-
 
 """50 HZ removal"""
 
