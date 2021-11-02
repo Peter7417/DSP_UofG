@@ -8,7 +8,7 @@ taps = fs * 2
 f0 = 50
 # dataRaw = np.loadtxt('ECG_msc_matric_4.dat')
 # data = dataRaw / max(dataRaw)
-data = np.loadtxt('ECG_msc_matric_4.dat')
+data = np.loadtxt('ECG_msc_matric_5.dat')
 lR = 0.00089
 t_max = 20
 

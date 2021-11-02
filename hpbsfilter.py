@@ -128,6 +128,8 @@ po = firfilter.firFilter(h_newBS)
 for i in range(len(fir)):
     fir[i] = po.dofilter(fir_HP[i])
 
+# fir[0:1000] = 0
+
 """Plot both the original ECG data set and new filtered data set """
 plt.figure(1)
 plt.subplot(1, 2, 1)
