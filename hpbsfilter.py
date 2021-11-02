@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import firfilter
-import scipy.signal as signal
 
 
 """Create a function to perform convolution """
@@ -27,7 +26,7 @@ def convolve(x, y):
     """Rearrange the list to move the last value to the front and replace it with the first value of data set 1 
     and convert back to an array"""
     ls.insert(0, ls.pop())
-    ls[0] = x[0]*y[0]
+    ls[0] = x[0] * y[0]
     return np.array(ls)
 
 
@@ -51,17 +50,17 @@ def convolveValid(x, y):
     """Rearrange the list to move the last value to the front and replace it with the first value of data set 1 
     and convert back to an array"""
     ls.insert(0, ls.pop())
-    ls[0] = x[0]*y[0]
+    ls[0] = x[0] * y[0]
     return np.array(ls)
 
 
 """50 HZ removal"""
 
 
-def bandstopDesign(freq, w1, w2, M):
+def bandstopDesign(w1, w2, M):
     # frequency resolution =0.5
-    cutoff_1 = int(w1 * M)
-    cutoff_2 = int(w2 * M)
+    cutoff_1 = w1
+    cutoff_2 = w2
     X = np.ones(M)
     X[cutoff_1:cutoff_2 + 1] = 0
     X[M - cutoff_2:M - cutoff_1 + 1] = 0
@@ -73,11 +72,12 @@ def bandstopDesign(freq, w1, w2, M):
 """DC noise removal"""
 
 
-def highpassDesign(freq, w2, M):
+def highpassDesign(w3, M):
     # frequency resolution =0.5
-    cutoff = int(w2 * M)
+    cutoff = w3
     X = np.ones(M)
     X[0:cutoff + 1] = 0
+    X[M - cutoff: M + 1] = 0
     x = np.real(np.fft.ifft(X))
 
     return x
@@ -85,62 +85,48 @@ def highpassDesign(freq, w2, M):
 
 # Q1 and Q2
 """Plot the ECG"""
-data = np.loadtxt('ECG_msc_matric_4.dat')
+# dataRaw = np.loadtxt('ECG_msc_matric_4.dat')
+# data = dataRaw / max(dataRaw)
+data = np.loadtxt('ECG_msc_matric_5.dat')
 t_max = 20
 t = np.linspace(0, t_max, len(data))
 
-f0 = 50  # noise frequency
 fs = 250  # sample frequency
-taps = (fs * 2)
+taps = (fs * 2)  # defining taps
 
 """Bandstop"""
-f1 = (45 / fs)   # before 50Hz
-f2 = (55 / fs)   # after 50Hz
+f1 = int((45 / fs) * taps)  # before 50Hz
+f2 = int((55 / fs) * taps)  # after 50Hz
 
 """Highpass"""
-f3 = (0.5 / fs)   # ideal for cutting off DC noise
+f3 = int((0.5 / fs) * taps)  # ideal for cutting off DC noise
 
 """Call the function for Bandstop and Highpass"""
-impulse_BS = bandstopDesign(fs, f1, f2, taps)
-impulse_HP = highpassDesign(fs, f3, taps)
-
-"""Convolve the coefficients of both the Bandstop and Highpass"""
-# coeff = convolve(impulse_HP, impulse_BS)
+impulse_BS = bandstopDesign(f1, f2, taps)
+impulse_HP = highpassDesign(f3, taps)
 
 """Reshuffle the coefficients for highpass"""
-h = np.zeros(taps)
-h[0:int(taps / 2)] = impulse_HP[int(taps / 2):taps]
-h[int(taps / 2):taps] = impulse_HP[0:int(taps / 2)]
-h_new = h * np.hanning(taps)
+h_HP = np.zeros(taps)
+h_HP[0:int(taps / 2)] = impulse_HP[int(taps / 2):taps]
+h_HP[int(taps / 2):taps] = impulse_HP[0:int(taps / 2)]
+h_newHP = h_HP * np.hanning(taps)
 
 """Reshuffle the coefficients for bandstop"""
-
-h1 = np.zeros(taps)
-h1[0:int(taps / 2)] = impulse_BS[int(taps / 2):taps]
-h1[int(taps / 2):taps] = impulse_BS[0:int(taps / 2)]
-h_new1 = h1 * np.hanning(taps)
+h_BS = np.zeros(taps)
+h_BS[0:int(taps / 2)] = impulse_BS[int(taps / 2):taps]
+h_BS[int(taps / 2):taps] = impulse_BS[0:int(taps / 2)]
+h_newBS = h_BS * np.hanning(taps)
 
 """Call the class method dofilter, by passing in only a scalar value at a time which outputs a scalar value"""
-fir_HP = np.empty(max(len(data), len(h_new)) - min(len(data), len(h_new)) + 1)
-fi = firfilter.firFilter(h_new)
+fir_HP = np.empty(len(data))
+fi = firfilter.firFilter(h_newHP)
 for i in range(len(fir_HP)):
     fir_HP[i] = fi.dofilter(data[i])
 
-fir = np.empty(max(len(fir_HP), len(h_new1)) - min(len(fir_HP), len(h_new1)) + 1)
-po = firfilter.firFilter(h_new1)
+fir = np.empty(len(data))
+po = firfilter.firFilter(h_newBS)
 for i in range(len(fir)):
     fir[i] = po.dofilter(fir_HP[i])
-
-"Test"
-# conv = np.convolve(h_new, data, mode='valid')
-# con1 = np.convolve(h_new1,conv,mode='valid')
-#
-#
-# d = convolveValid(h_new,data)
-# d1 = convolveValid(h_new1,conv)
-# print('conv: ',conv)
-# print('fir_hp: ',d)
-
 
 """Plot both the original ECG data set and new filtered data set """
 plt.figure(1)
@@ -148,7 +134,7 @@ plt.subplot(1, 2, 1)
 plt.plot(t, data)
 plt.title('ECG')
 plt.xlabel('time(sec)')
-plt.ylabel('ECG (volts)')
+plt.ylabel('Normalized ECG (volts)')
 
 t1 = np.linspace(0, t_max, len(fir))
 plt.subplot(1, 2, 2)
@@ -156,10 +142,7 @@ plt.plot(t1, fir)
 plt.xlim(0, t_max)
 plt.title('ECG 50Hz and Dc Noise Removed')
 plt.xlabel('time(sec)')
-plt.ylabel('ECG (volts)')
+plt.ylabel('Normalized ECG (volts)')
 
-"Test"
-# plt.figure(5)
-# y = signal.lfilter(h_new1, 1, conv)
-# plt.plot(y)
+
 plt.show()

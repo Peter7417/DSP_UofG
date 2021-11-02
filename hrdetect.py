@@ -1,8 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import firfilter
-import scipy.signal as signal
-
 
 """Create a function to perform convolution """
 
@@ -78,6 +76,7 @@ def highpassDesign(w2, M):
     cutoff = int(w2 * M)
     X = np.ones(M)
     X[0:cutoff + 1] = 0
+    X[M - cutoff: M + 1] = 0
     x = np.real(np.fft.ifft(X))
 
     return x
@@ -85,12 +84,12 @@ def highpassDesign(w2, M):
 
 # Q1 and Q2
 """Plot the ECG"""
-data = np.loadtxt('ECG_msc_matric_4.dat')
+# dataRaw = np.loadtxt('ECG_msc_matric_4.dat')
+# data = dataRaw / max(dataRaw)
+data = np.loadtxt('ECG_msc_matric_5.dat')
 t_max = 20
 t = np.linspace(0, t_max, len(data))
 
-f0 = 50  # noise frequency
-lR = 0.0001  # learning rate
 fs = 250  # sample frequency
 taps = (fs * 2)
 
@@ -119,81 +118,67 @@ h1[int(taps / 2):taps] = impulse_BS[0:int(taps / 2)]
 h_new1 = h1 * np.hanning(taps)
 
 """Call the class method dofilter, by passing in only a scalar value at a time which outputs a scalar value"""
-fir_HP = np.empty(max(len(data), len(h_new)) - min(len(data), len(h_new)) + 1)
+fir_HP = np.empty(len(data))
 fi = firfilter.firFilter(h_new)
 for i in range(len(fir_HP)):
     fir_HP[i] = fi.dofilter(data[i])
 
-fir = np.empty(max(len(fir_HP), len(h_new1)) - min(len(fir_HP), len(h_new1)) + 1)
+
+fir = np.empty(len(data))
 po = firfilter.firFilter(h_new1)
 for i in range(len(fir)):
     fir[i] = po.dofilter(fir_HP[i])
 
-plt.figure(8)
-plt.plot(fir)
-
-"Test"
-# conv = np.convolve(h_new, data, mode='valid')
-# # con1 = np.convolve(h_new1,conv,mode='valid')
-#
-#
 # plt.figure(8)
-# plt.plot(signal.lfilter(h_new1,1,conv))
-# y = signal.lfilter(h_new1,1,conv)
+# plt.plot(fir)
+
 # Q4
 
 """Find the range in the FIR plot where a heart beat occurs and plot it"""
 
 "Test"
-# plt.figure(2)
-# plt.subplot(2, 2, 1)
-# template = y[500:700]
-# time = t[500:700]
-# plt.plot(time, template)
-# plt.title("matched filter template")
-# plt.xlabel('time(sec)')
-# plt.ylabel('ECG (volts)')
 
 plt.figure(2)
-plt.subplot(2, 2, 1)
-template = fir[775:975]
-time = t[775:975]
+plt.subplot(1, 2, 1)
+template = fir[950:1200]
+time = t[950:1200]
 plt.plot(time, template)
 plt.title("matched filter template")
 plt.xlabel('time(sec)')
 plt.ylabel('ECG (volts)')
 
-"""Plot the time reversed version if the template """
-plt.subplot(2, 2, 2)
+"""Plot the time reversed version of the template """
+plt.subplot(1, 2, 2)
 coefficients = template[::-1]
 plt.plot(time, coefficients)
-plt.title("matched filter time reversed")
+plt.title("matched filter time reversed + sinc func")
 plt.xlabel('time(sec)')
 plt.ylabel('ECG (volts)')
 
 """Create the sinc function"""
 # low = min(coefficients)
 wavelet = np.linspace(-1, 1, len(time))
-plt.subplot(2, 2, 3)
-n_coeff = 5*np.sinc(wavelet*20)
-n_coeff[0:int(len(time)/2)-10] = 0
-n_coeff[int(len(time)/2) + 10:len(time)] = 0
+plt.subplot(1, 2, 2)
+n_coeff = max(coefficients)*np.sinc(wavelet*25)
+n_coeff[0:int(len(time)/2)-8] = 0
+n_coeff[int(len(time)/2) + 8:len(time)] = 0
 plt.plot(time, n_coeff)
-plt.title('Using sinc function')
-n_coeff = n_coeff**2
+# plt.title('Using sinc function')
+# n_coeff = n_coeff**2
 
+# Subplot adjustments
+plt.subplots_adjust(left=0.1,
+                    bottom=0.1,
+                    right=0.9,
+                    top=0.9,
+                    wspace=0.4,
+                    hspace=0.4)
 
-""""Use the dofilter function with the wavelet and the previous data set to find the convolved data set"""
-fir1 = np.empty(max(len(fir), len(n_coeff)) - min(len(fir), len(n_coeff)) + 1)
+""""Use the dofilter function with the wavelet and the previous data set to find the new fir data set"""
+fir1 = np.empty(len(data))
 fi = firfilter.firFilter(n_coeff)
 for i in range(len(fir1)):
     fir1[i] = fi.dofilter(fir[i])
-
-"Test"
-# q = signal.lfilter(n_coeff,1,y)
-# plt.figure(9)
-# plt.plot(q)
-
 
 """Plot both the original FIR and the new FIR"""
 t1 = np.linspace(0, t_max, len(fir))
@@ -204,5 +189,7 @@ plt.plot(t1, fir)
 plt.title('Original FIR output')
 plt.subplot(1, 2, 2)
 plt.plot(t2, fir1)
-plt.title('Sinc function on ECG with no DC noise')
+plt.title('Sinc function on original FIR')
+
+
 plt.show()
