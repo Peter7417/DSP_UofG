@@ -10,24 +10,19 @@ f0 = 50
 # data = dataRaw / max(dataRaw)
 data = np.loadtxt('ECG_msc_matric_4.dat')
 lR = 0.00089
-t_max = 20
+t_max = len(data) / fs
 
-
-coeff = np.zeros(taps)
 w = np.empty(len(data))
+t = np.linspace(0, t_max, len(w))
 
-
-f = firfilter.firFilter(coeff)
+f = firfilter.firFilter(np.zeros(taps))
 for i in range(len(data)):
     sinusoid = (np.sin(2 * np.pi * i * (f0 / fs)))
     w[i] = f.dofilterAdaptive(data[i], sinusoid, lR)
 
-t2 = np.linspace(0, t_max, len(w))
-plt.plot(t2, w)
+plt.plot(t, w)
 plt.title('ECG 50Hz LMS Filter')
-plt.xlabel('time(sec)')
+plt.xlabel('Time (sec)')
 plt.ylabel('Normalized ECG (volts)')
 
-
 plt.show()
-

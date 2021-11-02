@@ -33,13 +33,17 @@ class firFilter:
         return output
 
     def dofilterAdaptive(self, signal, noise, learningRate):
+        # ring buffer
+        self.buffer[self.s_offset % self.ntaps] = noise
+        
+        output = 0
+        for i in range(self.ntaps):
+            output += self.buffer[(i + self.s_offset) % self.ntaps] * self.coeff[i]
 
-        for j in range(self.ntaps - 1):
-            self.buffer[self.ntaps - j - 1] = self.buffer[self.ntaps - j - 2]
-        self.buffer[0] = noise
-        output = getOutput(self.buffer, self.coeff)
+        # update coefficients
         error = signal - output
         for k in range(self.ntaps):
-            self.coeff[k] += error * learningRate * self.buffer[k]
+            self.coeff[k] += error * learningRate * self.buffer[(k + self.s_offset) % self.ntaps]
 
+        self.s_offset += 1
         return error
