@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import firfilter
 
-
 """50 HZ removal"""
 
 
@@ -34,8 +33,6 @@ def highpassDesign(w2, M):
 
 # Q1 and Q2
 """Plot the ECG"""
-# dataRaw = np.loadtxt('ECG_msc_matric_4.dat')
-# data = dataRaw / max(dataRaw)
 data = np.loadtxt('ECG_msc_matric_5.dat')
 t_max = 20
 t = np.linspace(0, t_max, len(data))
@@ -44,11 +41,11 @@ fs = 250  # sample frequency
 taps = (fs * 2)
 
 """Bandstop"""
-f1 = (45 / fs)   # before 50Hz
-f2 = (55 / fs)   # after 50Hz
+f1 = (45 / fs)  # before 50Hz
+f2 = (55 / fs)  # after 50Hz
 
 """Highpass"""
-f3 = (0.5 / fs)   # ideal for cutting off DC noise
+f3 = (0.5 / fs)  # ideal for cutting off DC noise
 
 """Call the function for Bandstop and Highpass"""
 impulse_BS = bandstopDesign(f1, f2, taps)
@@ -73,24 +70,20 @@ fi = firfilter.firFilter(h_new)
 for i in range(len(fir_HP)):
     fir_HP[i] = fi.dofilter(data[i])
 
-
 fir = np.empty(len(data))
 po = firfilter.firFilter(h_new1)
 for i in range(len(fir)):
     fir[i] = po.dofilter(fir_HP[i])
 
-# plt.figure(8)
-# plt.plot(fir)
 
-# fir[0:900] = 0
 # Q4
 
 """Find the range in the FIR plot where a heart beat occurs and plot it"""
 
 "Test"
 
-plt.figure(2)
-plt.subplot(2, 2, 1)
+plt.figure(1)
+plt.subplot(1, 2, 1)
 template = fir[950:1200]
 time = t[950:1200]
 plt.plot(time, template)
@@ -99,7 +92,7 @@ plt.xlabel('time(sec)')
 plt.ylabel('ECG (volts)')
 
 """Plot the time reversed version of the template """
-plt.subplot(2, 2, 2)
+plt.subplot(1, 2, 2)
 coefficients = template[::-1]
 plt.plot(time, coefficients)
 plt.title("matched filter time reversed + sinc func")
@@ -108,21 +101,13 @@ plt.ylabel('ECG (volts)')
 
 """Create the sinc function"""
 wavelet = np.linspace(-1, 1, len(time))
-plt.subplot(2, 2, 2)
-n_coeff = max(coefficients)*np.sinc(wavelet*25)
-n_coeff[0:int(len(time)/2)-8] = 0
-n_coeff[int(len(time)/2) + 8:len(time)] = 0
+plt.subplot(1, 2, 2)
+n_coeff = max(coefficients) * np.sinc(wavelet * 25)
+n_coeff[0:int(len(time) / 2) - 8] = 0
+n_coeff[int(len(time) / 2) + 8:len(time)] = 0
 plt.plot(time, n_coeff)
-
-"""Optimize sinc function"""
-plt.subplot(2,2,3)
-n_coeff = 5*np.sinc(wavelet*25)
-n_coeff[0:int(len(time)/2)-8] = 0
-n_coeff[int(len(time)/2) + 8:len(time)] = 0
-plt.plot(time,n_coeff)
-plt.xlabel('time(sec)')
-plt.title('5* sinc function')
-n_coeff = n_coeff**2
+n_coeff = n_coeff ** 5  # Raised to the power of 5 to show the significant difference between the highest peak and the
+# smallest peak
 
 # Subplot adjustments
 plt.subplots_adjust(left=0.1,
@@ -141,7 +126,7 @@ for i in range(len(fir1)):
 """Plot both the original FIR and the new FIR"""
 t1 = np.linspace(0, t_max, len(fir))
 t2 = np.linspace(0, t_max, len(fir1))
-plt.figure(6)
+plt.figure(2)
 plt.subplot(1, 2, 1)
 plt.plot(t1, fir)
 plt.xlabel('time(sec)')
@@ -153,5 +138,38 @@ plt.xlabel('time(sec)')
 plt.ylabel('ECG (volts)')
 plt.title('Sinc function on original FIR')
 
+"""Define the R peak threshold """
+plt.figure(3)
+val = max(fir1[700:])  # 700 was picked since we want to avoid the anomalies caused by the filter starting up
+max_t = val + val / 2  # Dynamically set the max of the threshold
+min_t = val * 0.5   # Dynamically set the min of the threshold
+plt.plot(t1, fir1)
+plt.xlim(2.5)   # Limit the x-axis to start from 2.5
+plt.ylim(min_t, max_t)  # Limit the y-axis between max threshold and min threshold
+plt.xlabel('time(sec)')
+plt.ylabel('ECG (volts)')
+plt.title('Threshold R-Peaks plot')
 
+"""Create a list to store the time values where fir1 peaks"""
+peak_time = []
+i = 0
+while i < (len(fir1)):
+    if max_t > fir1[i] > min_t:
+        peak_time.append(t1[i])
+        i += 50
+    else:
+        i += 1
+
+"""Create a list to store the BPM values in reference to the peak times"""
+bpm = []
+
+for i in range(len(peak_time) - 1):
+    bpm.append(60 / (peak_time[i + 1] - peak_time[i]))
+
+"""Plot the momentary heart rate"""
+plt.figure(4)
+plt.step(peak_time[2:], bpm[1:])
+plt.xlabel('time(sec)')
+plt.ylabel('BPM')
+plt.title('Momentary Heart Rate')
 plt.show()

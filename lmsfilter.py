@@ -6,8 +6,7 @@ import firfilter
 fs = 250
 taps = fs * 2
 f0 = 50
-# dataRaw = np.loadtxt('ECG_msc_matric_4.dat')
-# data = dataRaw / max(dataRaw)
+
 data = np.loadtxt('ECG_msc_matric_5.dat')
 lR = 0.00089
 t_max = len(data) / fs
@@ -23,6 +22,6 @@ for i in range(len(data)):
 plt.plot(t, w)
 plt.title('ECG 50Hz LMS Filter')
 plt.xlabel('Time (sec)')
-plt.ylabel('Normalized ECG (volts)')
+plt.ylabel('ECG (volts)')
 
 plt.show()

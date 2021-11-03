@@ -34,8 +34,6 @@ def highpassDesign(w3, M):
 
 # Q1 and Q2
 """Plot the ECG"""
-# dataRaw = np.loadtxt('ECG_msc_matric_4.dat')
-# data = dataRaw / max(dataRaw)
 data = np.loadtxt('ECG_msc_matric_5.dat')
 t_max = 20
 t = np.linspace(0, t_max, len(data))
@@ -77,7 +75,6 @@ po = firfilter.firFilter(h_newBS)
 for i in range(len(fir)):
     fir[i] = po.dofilter(fir_HP[i])
 
-# fir[0:1000] = 0
 
 """Plot both the original ECG data set and new filtered data set """
 plt.figure(1)
@@ -85,7 +82,7 @@ plt.subplot(1, 2, 1)
 plt.plot(t, data)
 plt.title('ECG')
 plt.xlabel('time(sec)')
-plt.ylabel('Normalized ECG (volts)')
+plt.ylabel('ECG (volts)')
 
 t1 = np.linspace(0, t_max, len(fir))
 plt.subplot(1, 2, 2)
@@ -93,7 +90,6 @@ plt.plot(t1, fir)
 plt.xlim(0, t_max)
 plt.title('ECG 50Hz and Dc Noise Removed')
 plt.xlabel('time(sec)')
-plt.ylabel('Normalized ECG (volts)')
-
+plt.ylabel('ECG (volts)')
 
 plt.show()
