@@ -6,8 +6,9 @@ import firfilter
 """50 HZ removal"""
 
 
-def bandstopDesign(w1, w2, M):
+def bandstopDesign(samplerate, w1, w2):
     # frequency resolution =0.5
+    M = samplerate * 2
     cutoff_1 = w1
     cutoff_2 = w2
     X = np.ones(M)
@@ -21,8 +22,9 @@ def bandstopDesign(w1, w2, M):
 """DC noise removal"""
 
 
-def highpassDesign(w3, M):
+def highpassDesign(samplerate, w3):
     # frequency resolution =0.5
+    M = samplerate * 2
     cutoff = w3
     X = np.ones(M)
     X[0:cutoff + 1] = 0
@@ -49,8 +51,8 @@ f2 = int((55 / fs) * taps)  # after 50Hz
 f3 = int((0.5 / fs) * taps)  # ideal for cutting off DC noise
 
 """Call the function for Bandstop and Highpass"""
-impulse_BS = bandstopDesign(f1, f2, taps)
-impulse_HP = highpassDesign(f3, taps)
+impulse_BS = bandstopDesign(fs, f1, f2)
+impulse_HP = highpassDesign(fs, f3)
 
 """Reshuffle the coefficients for highpass"""
 h_HP = np.zeros(taps)
