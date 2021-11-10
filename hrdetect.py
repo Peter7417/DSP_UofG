@@ -2,6 +2,65 @@ import numpy as np
 import matplotlib.pyplot as plt
 import firfilter
 
+"""Reshuffle Function"""
+
+
+def reshuffle(filter_coeff):
+    h = np.zeros(taps)
+    h[0:int(taps / 2)] = filter_coeff[int(taps / 2):taps]
+    h[int(taps / 2):taps] = filter_coeff[0:int(taps / 2)]
+    return h * np.hanning(taps)
+
+
+"""Create a sinc wavelet"""
+
+
+def get_wavelet(length):
+    data_val = max(coefficients) * np.sinc(length * 25)
+    data_val[0:int(len(time) / 2) - 8] = 0
+    data_val[int(len(time) / 2) + 8:len(time)] = 0
+    return data_val
+
+
+"""R Peak Threshold Function"""
+
+
+def threshold(dataset):
+    val = max(dataset[700:])  # 700 was picked since we want to avoid the anomalies caused by the filter starting up
+    highest_volt = val + val / 2  # Dynamically set the max of the threshold
+    lowest_volt = val * 0.5  # Dynamically set the min of the threshold
+
+    return lowest_volt, highest_volt
+
+
+"""Generate a list to store peak times"""
+
+
+def get_peaktime(dataset, upper, lower, r):
+    data_points = []
+    iter_val = 0
+    while iter_val < (len(dataset)):
+        if upper > dataset[iter_val] > lower:
+            data_points.append(r[iter_val])
+            iter_val += 50
+        else:
+            iter_val += 1
+
+    return data_points
+
+
+"""Generate a list to store bpm_fir_wavelet values"""
+
+
+def get_bpm(dataset):
+    data_points = []
+
+    for iter_val in range(len(dataset) - 1):
+        data_points.append(60 / (dataset[iter_val + 1] - dataset[iter_val]))
+
+    return data_points
+
+
 """50 HZ removal"""
 
 
@@ -34,12 +93,13 @@ def highpassDesign(samplerate, w3):
 
 
 # Q1 and Q2
-"""Plot the ECG"""
+"""Load data into python"""
 data = np.loadtxt('ECG_msc_matric_5.dat')
-t_max = 20
-t = np.linspace(0, t_max, len(data))
 
+"""Define constants"""
 fs = 250  # sample frequency
+t_max = len(data) / fs  # sample time of data
+t = np.linspace(0, t_max, len(data))  # create an array to model the x-axis
 taps = (fs * 2)  # defining taps
 
 """Bandstop"""
@@ -53,36 +113,28 @@ f3 = int((0.5 / fs) * taps)  # ideal for cutting off DC noise
 impulse_BS = bandstopDesign(fs, f1, f2)
 impulse_HP = highpassDesign(fs, f3)
 
-"""Reshuffle the coefficients for highpass"""
-h = np.zeros(taps)
-h[0:int(taps / 2)] = impulse_HP[int(taps / 2):taps]
-h[int(taps / 2):taps] = impulse_HP[0:int(taps / 2)]
-h_new = h * np.hanning(taps)
+"""Reshuffle the coefficients for highpass by calling reshuffle function"""
+h_newHP = reshuffle(impulse_HP)
 
-"""Reshuffle the coefficients for bandstop"""
-
-h1 = np.zeros(taps)
-h1[0:int(taps / 2)] = impulse_BS[int(taps / 2):taps]
-h1[int(taps / 2):taps] = impulse_BS[0:int(taps / 2)]
-h_new1 = h1 * np.hanning(taps)
+"""Reshuffle the coefficients for bandstop by calling reshuffle function"""
+h_newBS = reshuffle(impulse_BS)
 
 """Call the class method dofilter, by passing in only a scalar value at a time which outputs a scalar value"""
+# obtain FIR_HP output when we couple the original ECG data with the highpass over a ring buffer
 fir_HP = np.empty(len(data))
-fi = firfilter.firFilter(h_new)
+fi = firfilter.firFilter(h_newHP)
 for i in range(len(fir_HP)):
     fir_HP[i] = fi.dofilter(data[i])
 
+# obtain FIR output when we couple the previously found FIR_HP data with the bandstop over a ring buffer
 fir = np.empty(len(data))
-po = firfilter.firFilter(h_new1)
+po = firfilter.firFilter(h_newBS)
 for i in range(len(fir)):
     fir[i] = po.dofilter(fir_HP[i])
 
-
 # Q4
 
-"""Find the range in the FIR plot where a heart beat occurs and plot it"""
-
-"Test"
+"""Find the range in the FIR plot where an ECG action occurs and plot it"""
 
 plt.figure(1)
 plt.subplot(1, 2, 1)
@@ -94,116 +146,86 @@ plt.xlabel('time(sec)')
 plt.ylabel('ECG (volts)')
 
 """Plot the time reversed version of the template """
+
 plt.subplot(1, 2, 2)
 coefficients = template[::-1]
-plt.plot(time, coefficients)
+plt.plot(time, coefficients, label='Time reversed')
 plt.title("matched filter time reversed + sinc func")
 plt.xlabel('time(sec)')
 plt.ylabel('ECG (volts)')
 
-"""Create the sinc function"""
-wavelet = np.linspace(-1, 1, len(time))
+"""Create and plot the sinc function"""
+
+n_coeff = get_wavelet(np.linspace(-1, 1, len(time)))
 plt.subplot(1, 2, 2)
-n_coeff = max(coefficients) * np.sinc(wavelet * 25)
-n_coeff[0:int(len(time) / 2) - 8] = 0
-n_coeff[int(len(time) / 2) + 8:len(time)] = 0
-plt.plot(time, n_coeff)
+plt.plot(time, n_coeff, label='Sinc function')
+plt.legend(loc='upper right')
 n_coeff = n_coeff ** 5  # Raised to the power of 5 to show the significant difference between the highest peak and the
 # smallest peak
 
-# Subplot adjustments
-plt.subplots_adjust(left=0.1,
-                    bottom=0.1,
-                    right=0.9,
-                    top=0.9,
-                    wspace=0.4,
-                    hspace=0.4)
 
-""""Use the dofilter function with the wavelet and the previous data set to find the new fir data set"""
-fir1 = np.empty(len(data))
+""""Call the dofilter function in the FIR class with the wavelet data 
+and the filtered FIR data set to find the new fir data set influenced by a wavelet"""
+
+fir_wavelet = np.empty(len(data))
 fi = firfilter.firFilter(n_coeff)
-for i in range(len(fir1)):
-    fir1[i] = fi.dofilter(fir[i])
+for i in range(len(fir_wavelet)):
+    fir_wavelet[i] = fi.dofilter(fir[i])
 
 """Plot both the original FIR and the new FIR"""
-t1 = np.linspace(0, t_max, len(fir))
-t2 = np.linspace(0, t_max, len(fir1))
+
+fir_time = np.linspace(0, t_max, len(fir))
+fir_wavelet_time = np.linspace(0, t_max, len(fir_wavelet))
 plt.figure(2)
 plt.subplot(1, 2, 1)
-plt.plot(t1, fir)
+plt.plot(fir_time, fir)
 plt.xlabel('time(sec)')
 plt.ylabel('ECG (volts)')
 plt.title('Original FIR output')
+
 plt.subplot(1, 2, 2)
-plt.plot(t2, fir1)
+plt.plot(fir_wavelet_time, fir_wavelet)
 plt.xlabel('time(sec)')
 plt.ylabel('ECG (volts)')
 plt.title('Sinc function on original FIR')
 
 """Define the R peak threshold """
 plt.figure(3)
-val = max(fir1[700:])  # 700 was picked since we want to avoid the anomalies caused by the filter starting up
-max_t = val + val / 2  # Dynamically set the max of the threshold
-min_t = val * 0.5   # Dynamically set the min of the threshold
-plt.plot(t2, fir1)
-plt.xlim(2.5)   # Limit the x-axis to start from 2.5
-plt.ylim(min_t, max_t)  # Limit the y-axis between max threshold and min threshold
+min_thresh, max_thresh = threshold(fir_wavelet)
+plt.plot(fir_wavelet_time, fir_wavelet)
+plt.xlim(2.5)  # Limit the x-axis to start from 2.5 since we don't want the range of values at which our filter starts
+plt.ylim(min_thresh, max_thresh)  # Limit the y-axis between max threshold and min threshold values
 plt.xlabel('time(sec)')
 plt.ylabel('ECG (volts)')
 plt.title('Threshold R-Peaks plot')
 
-"""Create a list to store the time values where fir1 peaks"""
-peak_time = []
-i = 0
-while i < (len(fir1)):
-    if max_t > fir1[i] > min_t:
-        peak_time.append(t2[i])
-        i += 50
-    else:
-        i += 1
+"""Call the get peak time function to create a list of peak times for the wavelet influenced FIR"""
+peak_time_fir_wavelet = get_peaktime(fir_wavelet, max_thresh, min_thresh, fir_wavelet_time)
 
-"""Create a list to store the BPM values in reference to the peak times"""
-bpm = []
+"""Call the get bpm function to create a list of bpm values for the wavelet influenced FIR"""
+bpm_fir_wavelet = get_bpm(peak_time_fir_wavelet)
 
-for i in range(len(peak_time) - 1):
-    bpm.append(60 / (peak_time[i + 1] - peak_time[i]))
-
-"""Plot the momentary heart rate"""
+"""Plot the momentary heart rate for fir_wavelet"""
 plt.figure(4)
-plt.step(peak_time[2:], bpm[1:], label="Wavelet Influenced")
+plt.step(peak_time_fir_wavelet[2:], bpm_fir_wavelet[1:], label="Wavelet Influenced")
 plt.xlabel('time(sec)')
 plt.ylabel('BPM')
 plt.title('Momentary Heart Rate')
 
-
 """Define the original FIR R peak threshold """
-val = max(fir[700:])  # 700 was picked since we want to avoid the anomalies caused by the filter starting up
-max_t1 = val + val / 2  # Dynamically set the max of the threshold
-min_t1 = val * 0.5   # Dynamically set the min of the threshold
+min_FIR_thresh, max_FIR_thresh = threshold(fir)
 
-"""Create a list to store the time values where fir peaks"""
-peak_time_1 = []
-i = 0
-while i < (len(fir)):
-    if max_t1 > fir[i] > min_t1:
-        peak_time_1.append(t1[i])
-        i += 50
-    else:
-        i += 1
+"""Call the get peak time function to create a list of peak times for the original FIR"""
+peak_time_fir = get_peaktime(fir, max_FIR_thresh, min_FIR_thresh, fir_time)
 
-"""Create a list to store the BPM values in reference to the peak times"""
-bpm_1 = []
+"""Call the get bpm function to create a list of bpm values for the original FIR"""
+bpm_fir = get_bpm(peak_time_fir)
 
-for i in range(len(peak_time_1) - 1):
-    bpm_1.append(60 / (peak_time_1[i + 1] - peak_time_1[i]))
-
-
-"""Plot the momentary heart rate"""
+"""Plot the momentary heart rate for the original fir"""
 plt.figure(4)
-plt.step(peak_time_1[2:], bpm_1[1:], label="Original FIR")
+plt.step(peak_time_fir[2:], bpm_fir[1:], label="Original FIR")
 plt.xlabel('time(sec)')
 plt.ylabel('BPM')
 plt.title('Momentary Heart Rate')
 plt.legend(loc="upper right")
 plt.show()
-
