@@ -12,6 +12,16 @@ def reshuffle(filter_coeff):
     return h * np.hanning(taps)
 
 
+"""Pull out one ECG action"""
+
+
+def get_ecgaction(dataset, dataset_time, start, stop):
+    data_range = dataset[start:stop]
+    time_range = dataset_time[start:stop]
+
+    return data_range, time_range
+
+
 """Create a sinc wavelet"""
 
 
@@ -67,11 +77,9 @@ def get_bpm(dataset):
 def bandstopDesign(samplerate, w1, w2):
     # frequency resolution =0.5
     M = samplerate * 2
-    cutoff_1 = w1
-    cutoff_2 = w2
     X = np.ones(M)
-    X[cutoff_1:cutoff_2 + 1] = 0
-    X[M - cutoff_2:M - cutoff_1 + 1] = 0
+    X[w1:w2 + 1] = 0
+    X[M - w2:M - w1 + 1] = 0
     x = np.real(np.fft.ifft(X))
 
     return x
@@ -83,28 +91,26 @@ def bandstopDesign(samplerate, w1, w2):
 def highpassDesign(samplerate, w3):
     # frequency resolution =0.5
     M = samplerate * 2
-    cutoff = w3
     X = np.ones(M)
-    X[0:cutoff + 1] = 0
-    X[M - cutoff: M + 1] = 0
+    X[0:w3 + 1] = 0
+    X[M - w3: M + 1] = 0
     x = np.real(np.fft.ifft(X))
 
     return x
 
 
-# Q1 and Q2
 """Load data into python"""
 data = np.loadtxt('ECG_msc_matric_5.dat')
 
 """Define constants"""
 fs = 250  # sample frequency
 t_max = len(data) / fs  # sample time of data
-t = np.linspace(0, t_max, len(data))  # create an array to model the x-axis
+t_data = np.linspace(0, t_max, len(data))  # create an array to model the x-axis with time values
 taps = (fs * 2)  # defining taps
 
 """Bandstop"""
-f1 = int((45 / fs) * taps)  # before 50Hz
-f2 = int((55 / fs) * taps)  # after 50Hz
+f1 = int((45 / fs) * taps)  # cutoff frequency before 50Hz
+f2 = int((55 / fs) * taps)  # cutoff frequency after 50Hz
 
 """Highpass"""
 f3 = int((0.5 / fs) * taps)  # ideal for cutting off DC noise
@@ -138,8 +144,7 @@ for i in range(len(fir)):
 
 plt.figure(1)
 plt.subplot(1, 2, 1)
-template = fir[950:1200]
-time = t[950:1200]
+template, time = get_ecgaction(fir, t_data, 950, 1200)  # call the function to pull out one ecg action
 plt.plot(time, template)
 plt.title("matched filter template")
 plt.xlabel('time(sec)')
@@ -148,7 +153,7 @@ plt.ylabel('ECG (volts)')
 """Plot the time reversed version of the template """
 
 plt.subplot(1, 2, 2)
-coefficients = template[::-1]
+coefficients = template[::-1]  # time reverse the template to obtain desired coefficient values
 plt.plot(time, coefficients, label='Time reversed')
 plt.title("matched filter time reversed + sinc func")
 plt.xlabel('time(sec)')
@@ -193,7 +198,8 @@ plt.title('Sinc function on original FIR')
 plt.figure(3)
 min_thresh, max_thresh = threshold(fir_wavelet)
 plt.plot(fir_wavelet_time, fir_wavelet)
-plt.xlim(2.5)  # Limit the x-axis to start from 2.5 since we don't want the range of values at which our filter starts
+plt.xlim(
+    2.5)  # Limit the x-axis to start from 2.5 since we don't_data want the range of values at which our filter starts
 plt.ylim(min_thresh, max_thresh)  # Limit the y-axis between max threshold and min threshold values
 plt.xlabel('time(sec)')
 plt.ylabel('ECG (volts)')
