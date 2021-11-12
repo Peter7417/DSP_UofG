@@ -211,13 +211,6 @@ peak_time_fir_wavelet = get_peaktime(fir_wavelet, max_thresh, min_thresh, fir_wa
 """Call the get bpm function to create a list of bpm values for the wavelet influenced FIR"""
 bpm_fir_wavelet = get_bpm(peak_time_fir_wavelet)
 
-"""Plot the momentary heart rate for fir_wavelet"""
-plt.figure(4)
-plt.step(peak_time_fir_wavelet[2:], bpm_fir_wavelet[1:], label="Wavelet Influenced")
-plt.xlabel('time(sec)')
-plt.ylabel('BPM')
-plt.title('Momentary Heart Rate')
-
 """Define the original FIR R peak threshold """
 min_FIR_thresh, max_FIR_thresh = threshold(fir)
 
@@ -233,5 +226,13 @@ plt.step(peak_time_fir[2:], bpm_fir[1:], label="Original FIR")
 plt.xlabel('time(sec)')
 plt.ylabel('BPM')
 plt.title('Momentary Heart Rate')
+
+"""Plot the momentary heart rate for fir_wavelet"""
+plt.figure(4)
+plt.step(peak_time_fir_wavelet[2:], bpm_fir_wavelet[1:], label="Wavelet Influenced")
+plt.xlabel('time(sec)')
+plt.ylabel('BPM')
+plt.title('Momentary Heart Rate')
 plt.legend(loc="upper right")
+
 plt.show()
