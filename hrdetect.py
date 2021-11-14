@@ -80,7 +80,7 @@ def get_bpm(dataset):
 
 def bandstopDesign(samplerate, w1, w2, itr):
     # frequency resolution =0.5
-    M = samplerate * itr  # calculate the taps
+    M = samplerate * itr  # calculate the ntaps
     X = np.ones(M)  # create an array of ones to model an ideal bandstop
     X[w1:w2 + 1] = 0  # mirror 1 (set all values to 0)
     X[M - w2:M - w1 + 1] = 0  # mirror 2 (set all values to 0)
@@ -94,7 +94,7 @@ def bandstopDesign(samplerate, w1, w2, itr):
 
 def highpassDesign(samplerate, w3, itr):
     # frequency resolution =0.5
-    M = samplerate * itr  # calculate the taps
+    M = samplerate * itr  # calculate the ntaps
     X = np.ones(M)  # create an array of ones to model an ideal highpass
     X[0:w3 + 1] = 0  # mirror 1 (set all values to 0)
     X[M - w3: M + 1] = 0  # mirror 2 (set all values to 0)
@@ -110,8 +110,8 @@ data = np.loadtxt('ecg.dat')
 fs = 250  # sample frequency
 t_max = len(data) / fs  # sample time of data
 t_data = np.linspace(0, t_max, len(data))  # create an array to model the x-axis with time values
-practical = 2  # define by how much the taps are greater than the sampling rate to account for transition width
-taps = (fs * practical)  # defining taps
+practical = 2  # define by how much the ntaps are greater than the sampling rate to account for transition width
+taps = (fs * practical)  # defining ntaps
 
 """Bandstop"""
 f1 = int((45 / fs) * taps)  # cutoff frequency before 50Hz
