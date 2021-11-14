@@ -42,7 +42,7 @@ def highpassDesign(samplerate, w3, itr):
 
 # Q1 and Q2
 """Load data into python"""
-data = np.loadtxt('ECG_msc_matric_5.dat')
+data = np.loadtxt('ecg.dat')
 
 """Define constants"""
 fs = 250  # sample frequency
