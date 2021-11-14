@@ -8,31 +8,44 @@ class firFilter:
         self.ntaps = len(_data)
         self.buffer = np.zeros(self.ntaps)
 
-        self.s_offset = 0
+        self.ringBuffIdx = 0  # BF 14/11/21 Renamed from offset -> ringBuffIdx
 
     def dofilter(self, v):
         # ring buffer
-        self.buffer[self.s_offset % self.ntaps] = v
-        
+        # BF 14/11/21 removed modulo operation here since we now wrap back to
+        # zero at the end of the function
+        self.buffer[self.ringBuffIdx] = v
+
         output = 0
         for i in range(self.ntaps):
-            output += self.buffer[(i + self.s_offset) % self.ntaps] * self.coeff[i]
+            output += self.buffer[(i + self.ringBuffIdx) % self.ntaps] * self.coeff[i]
 
-        self.s_offset += 1
+        self.ringBuffIdx += 1
+
+        #  BF 14/11/21 added this check to wrap the buffer index rather than
+        #  using modulo
+        if self.ringBuffIdx >= self.ntaps:
+            self.ringBuffIdx = 0
+
         return output
 
     def dofilterAdaptive(self, signal, noise, learningRate):
         # ring buffer
-        self.buffer[self.s_offset % self.ntaps] = noise
-        
+        self.buffer[self.ringBuffIdx] = noise
+
         output = 0
         for i in range(self.ntaps):
-            output += self.buffer[(i + self.s_offset) % self.ntaps] * self.coeff[i]
+            output += self.buffer[(i + self.ringBuffIdx) % self.ntaps] * self.coeff[i]
 
         # update coefficients
         error = signal - output
         for k in range(self.ntaps):
-            self.coeff[k] += error * learningRate * self.buffer[(k + self.s_offset) % self.ntaps]
+            self.coeff[k] += error * learningRate * self.buffer[(k + self.ringBuffIdx) % self.ntaps]
 
-        self.s_offset += 1
+        self.ringBuffIdx += 1
+        #  BF 14/11/21 added this check to wrap the buffer index rather than
+        #  using modulo
+        if self.ringBuffIdx >= self.ntaps:
+            self.ringBuffIdx = 0
+
         return error

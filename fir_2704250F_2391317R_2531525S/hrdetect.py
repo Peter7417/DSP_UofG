@@ -168,6 +168,7 @@ plt.ylabel('ECG (volts)')
 n_coeff = get_wavelet(np.linspace(-1, 1, len(ecgaction_time)), time_reversed_coeff, ecgaction_time)
 plt.subplot(1, 2, 2)
 plt.plot(ecgaction_time, n_coeff, label='Sinc function')
+plt.title("Time reversed match filter and sinc function")
 plt.legend(loc='upper right')
 n_coeff = n_coeff ** 5  # Raised to the power of 5 to show the significant difference between the highest peak and the
 # smallest peak
