@@ -36,8 +36,6 @@ data = np.loadtxt('ecg.dat')
 fs = 250  # sample frequency
 t_max = len(data) / fs  # sample time of data
 t_data = np.linspace(0, t_max, len(data))  # create an array to model the x-axis with time values
-resolution_factor = 2  # define by how much the ntaps are greater than the sampling rate to account for transition width
-ntaps = (fs * resolution_factor)  # defining ntaps
 f_sine = 50  # noise signal frequency
 lR = 0.001  # learning rate of the LMS filter
 
@@ -63,7 +61,7 @@ lms = np.empty(len(data))  # create an empty array to store LMS filter results
 time = np.linspace(0, t_max, len(lms))  # create an array to model the x-axis with time values
 
 """Call the dofilterAdaptive function from the class to compute the FIR dataset"""
-f = firfilter.firFilter(np.zeros(ntaps))
+f = firfilter.firFilter(np.zeros(len(impulse_BS)))
 for i in range(len(data)):
     sinusoid = (np.sin(2 * np.pi * i * (f_sine / fs)))
     lms[i] = f.dofilterAdaptive(data[i], sinusoid, lR)

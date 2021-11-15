@@ -115,8 +115,6 @@ data = np.loadtxt('ecg.dat')
 fs = 250  # sample frequency
 t_max = len(data) / fs  # sample time of data
 t_data = np.linspace(0, t_max, len(data))  # create an array to model the x-axis with time values
-resolution_factor = 2  # define by how much the ntaps are greater than the sampling rate to account for transition width
-ntaps = (fs * resolution_factor)  # defining ntaps
 
 """Bandstop"""
 f1 = 45  # cutoff frequency before 50Hz
