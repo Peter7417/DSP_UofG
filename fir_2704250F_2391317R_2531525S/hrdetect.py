@@ -156,7 +156,7 @@ template, ecgaction_time = get_ecgaction(fir, t_data, 950, 1200)  # call the fun
 plt.plot(ecgaction_time, template)
 plt.title("matched filter template")
 plt.xlabel('time(sec)')
-plt.ylabel('ECG (volts)')
+plt.ylabel('amplitude')
 
 """Plot the time reversed version of the template """
 
@@ -164,7 +164,7 @@ plt.subplot(1, 2, 2)
 time_reversed_coeff = template[::-1]  # time reverse the template to obtain desired coefficient values
 plt.plot(ecgaction_time, time_reversed_coeff, label='Time reversed')
 plt.xlabel('time(sec)')
-plt.ylabel('ECG (volts)')
+plt.ylabel('amplitude')
 
 """Create and plot the sinc function"""
 
@@ -193,13 +193,13 @@ plt.figure(2)
 plt.subplot(1, 2, 1)
 plt.plot(ecg_time, fir)
 plt.xlabel('time(sec)')
-plt.ylabel('ECG (volts)')
+plt.ylabel('amplitude')
 plt.title('Original FIR output')
 
 plt.subplot(1, 2, 2)
 plt.plot(ecg_time, fir_wavelet)
 plt.xlabel('time(sec)')
-plt.ylabel('ECG (volts)')
+plt.ylabel('amplitude')
 plt.title('Sinc function on original FIR')
 
 """Define and plot the R peak threshold """
@@ -211,7 +211,7 @@ plt.xlim(2.5)  # Limit the x-axis to start from 2.5 since we don't_data want the
 # starts
 plt.ylim(min_thresh, max_thresh)  # Limit the y-axis between max threshold and min threshold values
 plt.xlabel('time(sec)')
-plt.ylabel('ECG (volts)')
+plt.ylabel('amplitude')
 plt.title('Threshold R-Peaks plot')
 
 """Call the get peak_time function to create a list of peak times for the wavelet influenced FIR"""

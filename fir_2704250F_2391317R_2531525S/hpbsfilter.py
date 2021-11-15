@@ -93,10 +93,9 @@ plt.xlabel('time(sec)')
 plt.ylabel('ECG (volts)')
 
 plt.subplot(1, 2, 2)
-plt.plot(t_data, fir)
-plt.xlim(0, t_max)
+plt.plot(t_data,fir)
 plt.title('ECG 50Hz and Dc Noise Removed')
-plt.xlabel('time(sec)')
-plt.ylabel('ECG (volts)')
+plt.xlabel('time(sec')
+plt.ylabel('amplitude')
 
 plt.show()
