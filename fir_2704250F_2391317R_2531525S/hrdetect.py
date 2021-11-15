@@ -40,7 +40,7 @@ def get_wavelet(length, time_reversed_dataset, time_range):
 
 
 def threshold(dataset):
-    val = max(dataset[700:])  # 700 was picked as we want to avoid the anomalies caused by the filter starting up
+    val = max(dataset[800:])  # 800 was picked as we want to avoid the anomalies caused by the filter starting up
     highest_volt = val + val / 2  # Dynamically set the max of the threshold
     lowest_volt = val * 0.5  # Dynamically set the min of the threshold
 
@@ -79,9 +79,9 @@ def get_bpm(dataset):
 """50 HZ removal"""
 
 
-def bandstopDesign(samplerate, w1, w2):
-    # frequency resolution =0.5
-    M = samplerate * 2  # calculate the ntaps
+def bandstopDesign(samplerate, w1, w2, margin):
+    taps = int(np.abs((samplerate / (((w1 + w2) / 2) - w1))))  # calculate the ntaps
+    M = taps * margin  # account for the transition width using our predefined margin
     X = np.ones(M)  # create an array of ones to model an ideal bandstop
     cutoff_1 = int((w1 / samplerate) * M)  # array index calculation for cutoff frequency 1
     cutoff_2 = int((w2 / samplerate) * M)  # array index calculation for cutoff frequency 2
@@ -95,9 +95,9 @@ def bandstopDesign(samplerate, w1, w2):
 """DC noise removal"""
 
 
-def highpassDesign(samplerate, w3):
-    # frequency resolution =0.5
-    M = samplerate * 2  # calculate the ntaps
+def highpassDesign(samplerate, w3, margin):
+    taps = int(samplerate / w3)  # calculate the ntaps
+    M = taps * margin  # account for the transition width using our predefined margin
     X = np.ones(M)  # create an array of ones to model an ideal highpass
     cutoff_3 = int((w3 / samplerate) * M)  # array index calculation for cutoff frequency 3
     X[0:cutoff_3 + 1] = 0  # mirror 1 (set all values to 0)
@@ -115,6 +115,7 @@ data = np.loadtxt('ecg.dat')
 fs = 250  # sample frequency
 t_max = len(data) / fs  # sample time of data
 t_data = np.linspace(0, t_max, len(data))  # create an array to model the x-axis with time values
+transition_width_compensation = 2  # to account for the transition width in a practical scenario by a factor
 
 """Bandstop"""
 f1 = 45  # cutoff frequency before 50Hz
@@ -124,8 +125,8 @@ f2 = 55  # cutoff frequency after 50Hz
 f3 = 0.5  # ideal for cutting off DC noise
 
 """Call the function for Bandstop and Highpass"""
-impulse_BS = bandstopDesign(fs, f1, f2)
-impulse_HP = highpassDesign(fs, f3)
+impulse_BS = bandstopDesign(fs, f1, f2, transition_width_compensation)
+impulse_HP = highpassDesign(fs, f3, transition_width_compensation)
 
 """Reshuffle the time_reversed_coeff for highpass by calling reshuffle function"""
 h_newHP = reshuffle(impulse_HP)
@@ -146,13 +147,16 @@ po = firfilter.firFilter(h_newBS)
 for i in range(len(fir)):
     fir[i] = po.dofilter(fir_HP[i])
 
+# plt.figure(5)
+# plt.plot(fir)
+
 # Q4
 
 """Find the range in the FIR plot where an ECG action occurs and plot it"""
 
 plt.figure(1)
 plt.subplot(1, 2, 1)
-template, ecgaction_time = get_ecgaction(fir, t_data, 950, 1200)  # call the function to pull out one ecg action
+template, ecgaction_time = get_ecgaction(fir, t_data, 1000, 1250)  # call the function to pull out one ecg action
 plt.plot(ecgaction_time, template)
 plt.title("matched filter template")
 plt.xlabel('time(sec)')
@@ -207,7 +211,7 @@ plt.title('Sinc function on original FIR')
 plt.figure(3)
 min_thresh, max_thresh = threshold(fir_wavelet)
 plt.plot(ecg_time, fir_wavelet)
-plt.xlim(2.5)  # Limit the x-axis to start from 2.5 since we don't_data want the range of values at which our filter
+plt.xlim(3)  # Limit the x-axis to start from 3 since we don't_data want the range of values at which our filter
 # starts
 plt.ylim(min_thresh, max_thresh)  # Limit the y-axis between max threshold and min threshold values
 plt.xlabel('time(sec)')

@@ -16,9 +16,9 @@ def reshuffle(filter_coeff):
 """50 HZ removal"""
 
 
-def bandstopDesign(samplerate, w1, w2):
-    # frequency resolution =0.5
-    M = samplerate * 2  # calculate the ntaps
+def bandstopDesign(samplerate, w1, w2, margin):
+    taps = int(np.abs((samplerate / (((w1 + w2) / 2) - w1))))  # calculate the ntaps
+    M = taps * margin  # account for the transition width using our predefined margin
     X = np.ones(M)  # create an array of ones to model an ideal bandstop
     cutoff_1 = int((w1 / samplerate) * M)  # array index calculation for cutoff frequency 1
     cutoff_2 = int((w2 / samplerate) * M)  # array index calculation for cutoff frequency 2
@@ -37,14 +37,15 @@ fs = 250  # sample frequency
 t_max = len(data) / fs  # sample time of data
 t_data = np.linspace(0, t_max, len(data))  # create an array to model the x-axis with time values
 f_sine = 50  # noise signal frequency
-lR = 0.001  # learning rate of the LMS filter
+lR = 0.01  # learning rate of the LMS filter
+transition_width_compensation = 2  # to account for the transition width in a practical scenario by a factor
 
 """Bandstop"""
 f1 = 45  # cutoff frequency before 50Hz
 f2 = 55  # cutoff frequency after 50Hz
 
 """Call the function for Bandstop and Highpass"""
-impulse_BS = bandstopDesign(fs, f1, f2)
+impulse_BS = bandstopDesign(fs, f1, f2, transition_width_compensation)
 
 """Reshuffle the time_reversed_coeff for bandstop by calling reshuffle function"""
 h_newBS = reshuffle(impulse_BS)
