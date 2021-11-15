@@ -10,7 +10,7 @@ def reshuffle(filter_coeff):
     h = np.zeros(N_taps)  # create an array to hold the impulse response values
     h[0:int(N_taps / 2)] = filter_coeff[int(N_taps / 2):N_taps]  # perform a reshuffling action
     h[int(N_taps / 2):N_taps] = filter_coeff[0:int(N_taps / 2)]  # perform a reshuffling action
-    return h * np.hanning(N_taps)  # return the impulse response with a window function applied to it
+    return h  # return the impulse response
 
 
 """50 HZ removal"""
@@ -66,10 +66,10 @@ impulse_BS = bandstopDesign(fs, f1, f2, transition_width_compensation)
 impulse_HP = highpassDesign(fs, f3, transition_width_compensation)
 
 """Reshuffle the time_reversed_coeff for highpass by calling reshuffle function"""
-h_newHP = reshuffle(impulse_HP)
+h_newHP = reshuffle(impulse_HP) * np.hanning(len(impulse_HP))  # apply the appropriate window function
 
 """Reshuffle the time_reversed_coeff for bandstop by calling reshuffle function"""
-h_newBS = reshuffle(impulse_BS)
+h_newBS = reshuffle(impulse_BS) * np.blackman(len(impulse_BS))  # apply the appropriate window function
 
 """Call the class method dofilter, by passing in only a scalar value at a time which outputs a scalar value"""
 # obtain FIR_HP output when we couple the original ECG data with the highpass over a ring buffer

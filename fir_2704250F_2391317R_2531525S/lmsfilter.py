@@ -10,7 +10,7 @@ def reshuffle(filter_coeff):
     h = np.zeros(N_taps)  # create an array to hold the impulse response values
     h[0:int(N_taps / 2)] = filter_coeff[int(N_taps / 2):N_taps]  # perform a reshuffling action
     h[int(N_taps / 2):N_taps] = filter_coeff[0:int(N_taps / 2)]  # perform a reshuffling action
-    return h * np.hanning(N_taps)  # return the impulse response with a window function applied to it
+    return h   # return the impulse response
 
 
 """50 HZ removal"""
@@ -48,7 +48,7 @@ f2 = 55  # cutoff frequency after 50Hz
 impulse_BS = bandstopDesign(fs, f1, f2, transition_width_compensation)
 
 """Reshuffle the time_reversed_coeff for bandstop by calling reshuffle function"""
-h_newBS = reshuffle(impulse_BS)
+h_newBS = reshuffle(impulse_BS) * np.blackman(len(impulse_BS))  # apply the appropriate window function
 
 """Call the class method dofilter, where we only perform 50Hz removal to compare with our LMS filter"""
 fir_BS = np.empty(len(data))
