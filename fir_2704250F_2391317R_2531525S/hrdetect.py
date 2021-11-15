@@ -211,7 +211,7 @@ plt.title('Sinc function on original FIR')
 plt.figure(3)
 min_thresh, max_thresh = threshold(fir_wavelet)
 plt.plot(ecg_time, fir_wavelet)
-plt.xlim(3)  # Limit the x-axis to start from 3 since we don't_data want the range of values at which our filter
+plt.xlim(3)  # Limit the x-axis to start from 3 since we don't want the range of values at which our filter
 # starts
 plt.ylim(min_thresh, max_thresh)  # Limit the y-axis between max threshold and min threshold values
 plt.xlabel('time(sec)')
